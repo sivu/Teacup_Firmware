@@ -66,3 +66,8 @@ void clock_10ms() {
 	}
 }
 
+void clock_poll() {
+	ifclock(CLOCK_FLAG_10MS) {
+		clock_10ms();
+	}
+}

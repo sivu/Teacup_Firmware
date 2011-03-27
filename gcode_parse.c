@@ -135,7 +135,7 @@ void gcode_parse_char(uint8_t c) {
 				case 'M':
 					next_target.M = read_digit.mantissa;
 					if (debug_flags & DEBUG_ECHO)
-						serwrite_uint8(next_target.M);
+						serwrite_uint16(next_target.M);
 					break;
 				case 'X':
 					if (next_target.option_inches)
