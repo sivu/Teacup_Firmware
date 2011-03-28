@@ -270,7 +270,7 @@ void temp_sensor_tick() {
 			}
 			temp_sensors_runtime[i].last_read_temp = temp;
 
-			#ifndef EXTRUDER
+			#ifdef EECONFIG
 			if (labs(temp - temp_sensors_runtime[i].target_temp) < eeconfig.temp_hysteresis) {
 				if (temp_sensors_runtime[i].temp_residency < eeconfig.temp_residency)
 					temp_sensors_runtime[i].temp_residency++;

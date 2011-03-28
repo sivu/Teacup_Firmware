@@ -456,6 +456,7 @@ void process_gcode_command() {
 				power_off();
 				break;
 
+			#ifdef	EECONFIG
 				// EEPROM Configuration as per http://reprap.org/wiki/M-codes_for_EEPROM_config
 			// M244 - set baudrate
 			case 244:
@@ -519,7 +520,7 @@ void process_gcode_command() {
 				if (next_target.seen_E)
 					eeconfig.steps_per_mm_e = next_target.target.E;
 				break;
-
+			#endif	/* EECONFIG */
 
 			// DEBUG
 			#ifdef	DEBUG
