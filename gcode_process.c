@@ -331,6 +331,8 @@ void process_gcode_command() {
 
 			// M104- set temperature
 			case 104:
+				if (!next_target.seen_P)
+					next_target.P = next_target.target.T;
 				temp_set(next_target.P, next_target.S);
 				if (next_target.S)
 					power_on();
@@ -338,6 +340,8 @@ void process_gcode_command() {
 
 			// M105- get temperature
 			case 105:
+				if (!next_target.seen_P)
+					next_target.P = next_target.target.T;
 				temp_print(next_target.P);
 				break;
 
@@ -358,6 +362,8 @@ void process_gcode_command() {
 
 			// M109- set temp and wait
 			case 109:
+				if (!next_target.seen_P)
+					next_target.P = next_target.target.T;
 				temp_set(next_target.P, next_target.S);
 				if (next_target.S) {
 					power_on();
