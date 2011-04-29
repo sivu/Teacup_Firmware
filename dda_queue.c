@@ -16,6 +16,10 @@
 #include	"sersendf.h"
 #include	"clock.h"
 
+#ifdef SD
+	#include	"sd.h"
+#endif
+
 /// movebuffer head pointer. Points to the last move in the queue.
 uint8_t	mb_head = 0;
 
@@ -74,8 +78,20 @@ void enqueue(TARGET *t) {
 	while (queue_full())
 		delay(WAITING_DELAY);
 
-	uint8_t h = mb_head + 1;
-	h &= (MOVEBUFFER_SIZE - 1);
+	uint8_t h;
+	#ifdef SD
+		if (sdflags & SDFLAG_WRITING) {
+			// only use the first queue position when writing to SD
+			h = 0;
+		}
+		else {
+			h = mb_head + 1;
+			h &= (MOVEBUFFER_SIZE - 1);
+		}
+	#else
+		h = mb_head + 1;
+		h &= (MOVEBUFFER_SIZE - 1);
+	#endif
 
 	if (t != NULL) {
 		dda_create(&movebuffer[h], t);
@@ -95,9 +111,20 @@ void enqueue(TARGET *t) {
 
 	mb_head = h;
 
-	// fire up in case we're not running yet
-	if (movebuffer[mb_tail].live == 0)
-		next_move();
+	#ifdef SD
+		if (sdflags & SDFLAG_WRITING) {
+			// todo: write some precalculated data from dda_create eg distance
+		}
+		else {
+			// fire up in case we're not running yet
+			if (movebuffer[mb_tail].live == 0)
+				next_move();
+		}
+	#else
+		// fire up in case we're not running yet
+		if (movebuffer[mb_tail].live == 0)
+			next_move();
+	#endif
 }
 
 /// go to the next move.
