@@ -33,6 +33,10 @@
 #include	"analog.h"
 #endif
 
+#ifdef SD
+	#include	"sd.h"
+#endif
+
 typedef enum {
 	PRESENT,
 	TCOPEN
@@ -306,6 +310,10 @@ uint8_t	temp_achieved() {
 void temp_set(temp_sensor_t index, uint16_t temperature) {
 	if (index >= NUM_TEMP_SENSORS)
 		return;
+	#ifdef SD
+		if (sdflags & SDFLAG_WRITING)
+			return;
+	#endif
 
 	// only reset residency if temp really changed
 	if (temp_sensors_runtime[index].target_temp != temperature) {
