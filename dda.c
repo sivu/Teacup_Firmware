@@ -352,20 +352,36 @@ void dda_create(DDA *dda, TARGET *target) {
 				dda->c_min = c_limit;
 			dda->n = 1;
 			dda->ramp_state = RAMP_UP;
-		#elif defined ACCELERATION_TEMPORAL
-			dda->x_counter = dda->x_step_interval = move_duration / dda->x_delta;
-			dda->y_counter = dda->y_step_interval = move_duration / dda->y_delta;
-			dda->z_counter = dda->z_step_interval = move_duration / dda->z_delta;
-			dda->e_counter = dda->e_step_interval = move_duration / dda->e_delta;
-
-			dda->c = dda->x_step_interval;
-			if (dda->y_step_interval < dda->c)
-				dda->c = dda->y_step_interval;
-			if (dda->z_step_interval < dda->c)
-				dda->c = dda->z_step_interval;
-			if (dda->e_step_interval < dda->c)
-				dda->c = dda->e_step_interval;
-
+//		#elif defined ACCELERATION_TEMPORAL
+			dda->c = 0xFFFFFFFF;
+//		dda->x_counter = dda->x_step_interval = move_duration / dda->x_delta;
+			if (dda->x_delta) { // no division by zero :-)
+#warning will overflow at 26.8 mm ( 2^^32 / 500000 / 320 )
+				dda->x_counter = dda->x_step_interval = \
+					ACCELERATION_STEEPNESS * dda->total_steps / dda->x_delta;
+				dda->c = dda->x_counter;
+			}
+//		dda->y_counter = dda->y_step_interval = move_duration / dda->y_delta;
+			if (dda->y_delta) {
+				dda->y_counter = dda->y_step_interval = \
+					ACCELERATION_STEEPNESS * dda->total_steps / dda->y_delta;
+				if (dda->y_counter < dda->c)
+					dda->c = dda->y_counter;
+			}
+//		dda->z_counter = dda->z_step_interval = move_duration / dda->z_delta;
+			if (dda->z_delta) {
+				dda->z_counter = dda->z_step_interval = \
+					ACCELERATION_STEEPNESS * dda->total_steps / dda->z_delta;
+				if (dda->z_counter < dda->c)
+					dda->c = dda->z_counter;
+			}
+//		dda->e_counter = dda->e_step_interval = move_duration / dda->e_delta;
+			if (dda->e_delta) {
+				dda->e_counter = dda->e_step_interval = \
+					ACCELERATION_STEEPNESS * dda->total_steps / dda->e_delta;
+				if (dda->e_counter < dda->c)
+					dda->c = dda->e_counter;
+			}
 			dda->c <<= 8;
 		#else
 			dda->c = (move_duration / target->F) << 8;
@@ -450,7 +466,7 @@ void dda_step(DDA *dda) {
 	// called from interrupt context! keep it as simple as possible
 	uint8_t	did_step = 0;
 
-	#ifdef ACCELERATION_TEMPORAL
+		#if defined ACCELERATION_TEMPORAL || defined ACCELERATION_RAMPING
 		if (dda->x_counter <= 0) {
 			if ((current_position.X != dda->endpoint.X) /* &&
 				(x_max() != dda->x_direction) && (x_min() == dda->x_direction) */) {
@@ -588,6 +604,7 @@ void dda_step(DDA *dda) {
 		// - algorithm courtesy of http://www.embedded.com/columns/technicalinsights/56800129?printable=true
 		// - for simplicity, taking even/uneven number of steps into account dropped
 		// - number of steps moved is always accurate, speed might be one step off
+#warning Calculate this when the fast axis had a step, only!
 		switch (dda->ramp_state) {
 			case RAMP_UP:
 			case RAMP_MAX:
@@ -612,15 +629,28 @@ void dda_step(DDA *dda) {
 				break;
 		}
 		dda->step_no++;
-	#endif
-	#ifdef ACCELERATION_TEMPORAL
-		dda->c = dda->x_counter;
-		if (dda->y_counter < dda->c)
-			dda->c = dda->y_counter;
-		if (dda->z_counter < dda->c)
-			dda->c = dda->z_counter;
-		if (dda->e_counter < dda->c)
-			dda->c = dda->e_counter;
+		
+//	#ifdef ACCELERATION_TEMPORAL
+		dda->c = 0xFFFFFFFF;
+		if (dda->x_delta) { // no division by zero :-)
+			dda->x_step_interval = (dda->c >> 8) * dda->total_steps / dda->x_delta;
+			dda->c = dda->x_counter;
+		}
+		if (dda->y_delta) {
+			dda->y_step_interval = (dda->c >> 8) * dda->total_steps / dda->y_delta;
+			if (dda->y_counter < dda->c)
+				dda->c = dda->y_counter;
+		}
+		if (dda->z_delta) {
+			dda->z_step_interval = (dda->c >> 8) * dda->total_steps / dda->z_delta;
+			if (dda->z_counter < dda->c)
+				dda->c = dda->z_counter;
+		}
+		if (dda->e_delta) {
+			dda->e_step_interval = (dda->c >> 8) * dda->total_steps / dda->e_delta;
+			if (dda->e_counter < dda->c)
+				dda->c = dda->e_counter;
+		}
 
 		if (dda->x_delta)
 			dda->x_counter -= dda->c;

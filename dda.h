@@ -108,8 +108,6 @@ typedef struct {
 	int32_t						n;
 	/// keep track of whether we're ramping up, down, or plateauing
 	ramp_state_t			ramp_state;
-	#endif
-	#ifdef ACCELERATION_TEMPORAL
 	/// time between steps on X axis
 	uint32_t					x_step_interval;
 	/// time between steps on Y axis
