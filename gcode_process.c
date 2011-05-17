@@ -100,12 +100,12 @@ void process_gcode_command() {
 
 	// implement axis limits
 	#ifdef	X_MIN
-		if (next_target.target.X < (X_MIN * STEPS_PER_MM_X))
-			next_target.target.X = X_MIN * STEPS_PER_MM_X;
+		if (next_target.target.X < X_MIN * 1000.)
+			next_target.target.X = X_MIN * 1000.;
 	#endif
 	#ifdef	X_MAX
-		if (next_target.target.X > (X_MAX * STEPS_PER_MM_X))
-			next_target.target.X = X_MAX * STEPS_PER_MM_X;
+		if (next_target.target.X > X_MAX * 1000.))
+			next_target.target.X = X_MAX * 1000.;
 	#endif
 	#ifdef	Y_MIN
 		if (next_target.target.Y < (Y_MIN * STEPS_PER_MM_Y))
@@ -393,7 +393,7 @@ void process_gcode_command() {
 				// M113- extruder PWM
 			// M114- report XYZEF to host
 			case 114:
-				sersendf_P(PSTR("X:%lq,Y:%lq,Z:%lq,E:%lq,F:%ld"), current_position.X * ((int32_t) UM_PER_STEP_X), current_position.Y * ((int32_t) UM_PER_STEP_Y), current_position.Z * ((int32_t) UM_PER_STEP_Z), current_position.E * ((int32_t) UM_PER_STEP_E), current_position.F);
+				sersendf_P(PSTR("X:%lq,Y:%lq,Z:%lq,E:%lq,F:%ld"), current_position.X, current_position.Y * ((int32_t) UM_PER_STEP_Y), current_position.Z * ((int32_t) UM_PER_STEP_Z), current_position.E * ((int32_t) UM_PER_STEP_E), current_position.F);
 				// newline is sent from gcode_parse after we return
 				break;
 			// M115- capabilities string

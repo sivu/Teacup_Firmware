@@ -52,7 +52,7 @@ void home_x_negative() {
 			delay(5);
 			unstep();
 			// wait until next step time
-			delay((uint32_t) (60.0 * 1000000.0 / STEPS_PER_MM_X / ((float) MAXIMUM_FEEDRATE_X)));
+			delay((uint32_t) (60.0 * 1000000.0 / STEPS_PER_M_X * 1000.0 / ((float) MAXIMUM_FEEDRATE_X)));
 		}
 		denoise_count = 0;
 
@@ -64,7 +64,7 @@ void home_x_negative() {
 			delay(5);
 			unstep();
 			// wait until next step time
-			delay((uint32_t) (60.0 * 1000000.0 / STEPS_PER_MM_X / ((float) SEARCH_FEEDRATE_X)));
+			delay((uint32_t) (60.0 * 1000000.0 / STEPS_PER_M_X * 1000.0 / ((float) SEARCH_FEEDRATE_X)));
 		}
 
 		// set X home
@@ -94,7 +94,7 @@ void home_x_positive() {
 			delay(5);
 			unstep();
 			// wait until next step time
-			delay((uint32_t) (60.0 * 1000000.0 / STEPS_PER_MM_X / ((float) MAXIMUM_FEEDRATE_X)));
+			delay((uint32_t) (60.0 * 1000000.0 / STEPS_PER_M_X * 1000.0 / ((float) MAXIMUM_FEEDRATE_X)));
 		}
 		denoise_count = 0;
 
@@ -106,13 +106,13 @@ void home_x_positive() {
 			delay(5);
 			unstep();
 			// wait until next step time
-			delay((uint32_t) (60.0 * 1000000.0 / STEPS_PER_MM_X / ((float) SEARCH_FEEDRATE_X)));
+			delay((uint32_t) (60.0 * 1000000.0 / STEPS_PER_M_X * 1000.0 / ((float) SEARCH_FEEDRATE_X)));
 		}
 
 		// set X home
 		TARGET t = {0, 0, 0, 0, 0};
 		// set position to MAX
-		startpoint.X = current_position.X = (int32_t) (X_MAX * STEPS_PER_MM_X);
+		startpoint.X = current_position.X = (int32_t)(X_MAX * 1000.0);
 		// go to zero
 		t.F = MAXIMUM_FEEDRATE_X;
 		enqueue(&t);

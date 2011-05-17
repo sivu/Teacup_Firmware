@@ -173,7 +173,7 @@ void dda_init(void) {
 
 	#ifdef ACCELERATION_RAMPING
 		move_state.n = 1;
-		move_state.c = ((uint32_t)((double)F_CPU / sqrt((double)(STEPS_PER_MM_X * ACCELERATION)))) << 8;
+		move_state.c = ((uint32_t)((double)F_CPU / sqrt((double)(STEPS_PER_M_X * ACCELERATION / 1000.)))) << 8;
 	#endif
 }
 
@@ -190,6 +190,7 @@ void dda_init(void) {
 	This algorithm is probably the main limiting factor to print speed in terms of firmware limitations
 */
 void dda_create(DDA *dda, TARGET *target) {
+	uint32_t	x_delta_um;
 	uint32_t	distance, c_limit, c_limit_calc;
 
 	// initialise DDA to a known state
@@ -201,7 +202,9 @@ void dda_create(DDA *dda, TARGET *target) {
 	// we end at the passed target
 	memcpy(&(dda->endpoint), target, sizeof(TARGET));
 
-	dda->x_delta = labs(target->X - startpoint.X);
+	x_delta_um = (uint32_t)labs(target->X - startpoint.X);
+
+	um_to_steps_x(dda->x_delta, x_delta_um);
 	dda->y_delta = labs(target->Y - startpoint.Y);
 	dda->z_delta = labs(target->Z - startpoint.Z);
 	dda->e_delta = labs(target->E - startpoint.E);
@@ -239,11 +242,11 @@ void dda_create(DDA *dda, TARGET *target) {
 
 		// since it's unusual to combine X, Y and Z changes in a single move on reprap, check if we can use simpler approximations before trying the full 3d approximation.
 		if (dda->z_delta == 0)
-			distance = approx_distance(dda->x_delta * UM_PER_STEP_X, dda->y_delta * UM_PER_STEP_Y);
+			distance = approx_distance(x_delta_um, dda->y_delta * UM_PER_STEP_Y);
 		else if (dda->x_delta == 0 && dda->y_delta == 0)
 			distance = dda->z_delta * UM_PER_STEP_Z;
 		else
-			distance = approx_distance_3(dda->x_delta * UM_PER_STEP_X, dda->y_delta * UM_PER_STEP_Y, dda->z_delta * UM_PER_STEP_Z);
+			distance = approx_distance_3(x_delta_um, dda->y_delta * UM_PER_STEP_Y, dda->z_delta * UM_PER_STEP_Z);
 
 		if (distance < 2)
 			distance = dda->e_delta * UM_PER_STEP_E;
@@ -277,7 +280,7 @@ void dda_create(DDA *dda, TARGET *target) {
 		// do this for each axis individually, as the combined speed of two or more axes can be higher than the capabilities of a single one.
 		c_limit = 0;
 		// check X axis
-		c_limit_calc = ( (dda->x_delta * (UM_PER_STEP_X * 2400L)) / dda->total_steps * (F_CPU / 40000) / MAXIMUM_FEEDRATE_X) << 8;
+		c_limit_calc = ((x_delta_um * 2400L) / dda->total_steps * (F_CPU / 40000) / MAXIMUM_FEEDRATE_X) << 8;
 		if (c_limit_calc > c_limit)
 			c_limit = c_limit_calc;
 		// check Y axis
@@ -356,7 +359,7 @@ void dda_create(DDA *dda, TARGET *target) {
 			if (dda->c_min < c_limit)
 				dda->c_min = c_limit;
 			// overflows at target->F > 65535; factor 16. found by try-and-error; will overshoot target speed a bit
-			dda->rampup_steps = target->F * target->F / (uint32_t)(STEPS_PER_MM_X * ACCELERATION / 16.);
+			dda->rampup_steps = target->F * target->F / (uint32_t)(STEPS_PER_M_X * ACCELERATION / 16000.);
 			if (dda->rampup_steps > dda->total_steps / 2)
 				dda->rampup_steps = dda->total_steps / 2;
 			dda->rampdown_steps = dda->total_steps - dda->rampup_steps;
@@ -615,9 +618,10 @@ void update_position() {
 		return;
 
 	if (dda->x_direction)
-		current_position.X = dda->endpoint.X - move_state.x_steps;
+		// (STEPS_PER_M_X / 1000) is a bit inaccurate for low STEPS_PER_M numbers
+		current_position.X = dda->endpoint.X - move_state.x_steps / (STEPS_PER_M_X / 1000);
 	else
-		current_position.X = dda->endpoint.X + move_state.x_steps;
+		current_position.X = dda->endpoint.X + move_state.x_steps / (STEPS_PER_M_X / 1000);
 
 	if (dda->y_direction)
 		current_position.Y = dda->endpoint.Y - move_state.y_steps;

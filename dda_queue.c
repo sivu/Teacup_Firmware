@@ -136,7 +136,7 @@ void enqueue(TARGET *t) {
 			MEMORY_BARRIER();
 			SREG = save_reg;
 		}
-	}	
+	}
 }
 
 /// go to the next move.
