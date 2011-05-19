@@ -104,7 +104,7 @@ void process_gcode_command() {
 			next_target.target.X = X_MIN * 1000.;
 	#endif
 	#ifdef	X_MAX
-		if (next_target.target.X > X_MAX * 1000.))
+		if (next_target.target.X > X_MAX * 1000.)
 			next_target.target.X = X_MAX * 1000.;
 	#endif
 	#ifdef	Y_MIN
