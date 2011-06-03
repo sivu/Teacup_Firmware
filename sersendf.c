@@ -11,7 +11,7 @@
 #include	"sermsg.h"
 
 /// for sending hex data
-PGM_P	str_ox = "0x";
+// PGM_P	str_ox = "0x";
 
 // void sersendf(char *format, ...) {
 // 	va_list args;
@@ -130,7 +130,7 @@ void sersendf_P(PGM_P format, ...) {
 					j = 0;
 					break;
 				case 'x':
-					serial_writestr_P(str_ox);
+					serial_writestr_P(PSTR("0x"));
 					if (j == 4)
 						serwrite_hex32(va_arg(args, uint32_t));
 					else if (j == 1)
@@ -143,6 +143,10 @@ void sersendf_P(PGM_P format, ...) {
 					serwrite_hex16(va_arg(args, uint16_t));*/
 				case 'q':
 					serwrite_int32_vf(va_arg(args, int32_t), 3);
+					j = 0;
+					break;
+				case 't':
+					serial_writestr(va_arg(args, uint8_t *));
 					j = 0;
 					break;
 				default:

@@ -17,6 +17,10 @@
 #include	"clock.h"
 #include	"memory_barrier.h"
 
+#ifdef SD
+	#include	"sd.h"
+#endif
+
 /// movebuffer head pointer. Points to the last move in the queue.
 /// this variable is used both in and out of interrupts, but is
 /// only written outside of interrupts.
@@ -94,8 +98,20 @@ void enqueue(TARGET *t) {
 	while (queue_full())
 		delay(WAITING_DELAY);
 
-	uint8_t h = mb_head + 1;
-	h &= (MOVEBUFFER_SIZE - 1);
+	uint8_t h;
+	#ifdef SD
+		if (sdflags & SDFLAG_WRITING) {
+			// only use the first queue position when writing to SD
+			h = 0;
+		}
+		else {
+			h = mb_head + 1;
+			h &= (MOVEBUFFER_SIZE - 1);
+		}
+	#else
+		h = mb_head + 1;
+		h &= (MOVEBUFFER_SIZE - 1);
+	#endif
 
 	DDA* new_movebuffer = &(movebuffer[h]);
 	
@@ -114,29 +130,40 @@ void enqueue(TARGET *t) {
 	
 	mb_head = h;
 	
-	uint8_t save_reg = SREG;
-	cli();
-	CLI_SEI_BUG_MEMORY_BARRIER();
-
-	uint8_t isdead = (movebuffer[mb_tail].live == 0);
-	
-	MEMORY_BARRIER();
-	SREG = save_reg;
-	
-	if (isdead) {
-		timer1_compa_deferred_enable = 0;
-		next_move();
-		if (timer1_compa_deferred_enable) {
-			uint8_t save_reg = SREG;
-			cli();
-			CLI_SEI_BUG_MEMORY_BARRIER();
-			
-			TIMSK1 |= MASK(OCIE1A);
-			
-			MEMORY_BARRIER();
-			SREG = save_reg;
+	#ifdef SD
+		if (sdflags & SDFLAG_WRITING) {
+			// todo: write some precalculated data from dda_create eg distance
 		}
-	}
+		else {
+			// fire up in case we're not running yet
+			if (movebuffer[mb_tail].live == 0)
+				next_move();
+		}
+	#else
+		uint8_t save_reg = SREG;
+		cli();
+		CLI_SEI_BUG_MEMORY_BARRIER();
+		
+		uint8_t isdead = (movebuffer[mb_tail].live == 0);
+		
+		MEMORY_BARRIER();
+		SREG = save_reg;
+		
+		if (isdead) {
+			timer1_compa_deferred_enable = 0;
+			next_move();
+			if (timer1_compa_deferred_enable) {
+				uint8_t save_reg = SREG;
+				cli();
+				CLI_SEI_BUG_MEMORY_BARRIER();
+				
+				TIMSK1 |= MASK(OCIE1A);
+				
+				MEMORY_BARRIER();
+				SREG = save_reg;
+			}
+		}
+	#endif
 }
 
 /// go to the next move.
