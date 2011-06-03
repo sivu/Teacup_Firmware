@@ -271,7 +271,6 @@ pins
 #define AIO7_PWM		NULL
 
 
-
 #undef PA0
 #define PA0_PIN			PINA0
 #define PA0_RPORT		PINA

@@ -78,3 +78,8 @@ void clock_10ms() {
 	update_position();
 }
 
+void clock_poll() {
+	ifclock(CLOCK_FLAG_10MS) {
+		clock_10ms();
+	}
+}

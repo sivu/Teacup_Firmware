@@ -160,7 +160,6 @@ pins
 #define AIO7_PWM		NULL
 
 
-
 #undef PB0
 #define PB0_PIN			PINB0
 #define PB0_RPORT		PINB

@@ -22,6 +22,7 @@
 #include	"clock.h"
 #include	"config.h"
 #include	"home.h"
+#include	"eeconfig.h"
 
 #ifdef SD
 	#include	"sd.h"
@@ -441,6 +442,7 @@ void process_gcode_command() {
 				break;
 			// M135- set heater output
 			case 135:
+			case 247:
 				if (next_target.seen_S) {
 					heater_set(next_target.P, next_target.S);
 					power_on();
@@ -479,22 +481,89 @@ void process_gcode_command() {
 				power_off();
 				break;
 
+			#ifdef	EECONFIG
+				// EEPROM Configuration as per http://reprap.org/wiki/M-codes_for_EEPROM_config
+			// M244 - set baudrate
+			case 244:
+				if (next_target.seen_S)
+					if (next_target.S >= 1200 && next_target.S <= 1000000)
+						eeconfig.baud = next_target.S;
+				break;
+			// M245 - Write temp table value, S(index), X(adc reading) Y(temperature)
+			/// TODO: check values for sanity
+			case 245:
+				if (next_target.seen_S && next_target.seen_X && next_target.seen_Y) {
+					eeconfig.temptable[next_target.S].adc_value = next_target.target.X;
+					eeconfig.temptable[next_target.S].temperature = next_target.target.Y;
+				}
+				break;
+			// M246 - choose thermistor profile
+			// M247 - set heater PWM, see M135 above
+			// M248 - PID stuff- see M130-M133 above
+			// M249 - temp residency time - wait for all temps to be within target for this long before continuing M109 and friends
+			case 249:
+				if (next_target.seen_P)
+					eeconfig.temp_residency = next_target.P;
+				break;
+			// M250 - Z min endstop position - non-zero to avoid head crashing into bed during homing
+			case 250:
+				if (next_target.seen_Z)
+					eeconfig.min_endstop_pos_z = next_target.target.Z;
+				break;
+			// M251 - set max bed temp (failsafe)
+			case 251:
+				break;
+			// M252 - set max extruder temp (failsafe)
+			// M253 - max speeds
+			case 253:
+				if (next_target.seen_X)
+					eeconfig.max_speed_x = next_target.target.X;
+				if (next_target.seen_Y)
+					eeconfig.max_speed_y = next_target.target.Y;
+				if (next_target.seen_Z)
+					eeconfig.max_speed_z = next_target.target.Z;
+				if (next_target.seen_E)
+					eeconfig.max_speed_e = next_target.target.E;
+				break;
+			// M254 - set build volume
+			case 254:
+				if (next_target.seen_X)
+					eeconfig.size_x = next_target.target.X;
+				if (next_target.seen_Y)
+					eeconfig.size_y = next_target.target.Y;
+				if (next_target.seen_Z)
+					eeconfig.size_z = next_target.target.Z;
+				break;
+			// M255 - set steps per mm
+			case 255:
+				if (next_target.seen_X)
+					eeconfig.steps_per_mm_x = next_target.target.X;
+				if (next_target.seen_Y)
+					eeconfig.steps_per_mm_y = next_target.target.Y;
+				if (next_target.seen_Z)
+					eeconfig.steps_per_mm_z = next_target.target.Z;
+				if (next_target.seen_E)
+					eeconfig.steps_per_mm_e = next_target.target.E;
+				break;
+			#endif	/* EECONFIG */
+
+			// DEBUG
 			#ifdef	DEBUG
-			// M240- echo off
-			case 240:
+			// M340- echo off
+			case 340:
 				debug_flags &= ~DEBUG_ECHO;
 				serial_writestr_P(PSTR("Echo off"));
 				// newline is sent from gcode_parse after we return
 				break;
-				// M241- echo on
-			case 241:
+				// M341- echo on
+			case 341:
 				debug_flags |= DEBUG_ECHO;
 				serial_writestr_P(PSTR("Echo on"));
 				// newline is sent from gcode_parse after we return
 				break;
 
 			// DEBUG: return current position, end position, queue
-			case 250:
+			case 350:
 				sersendf_P(PSTR("{X:%ld,Y:%ld,Z:%ld,E:%ld,F:%lu,c:%lu}\t{X:%ld,Y:%ld,Z:%ld,E:%ld,F:%lu,c:%lu}\t"), current_position.X, current_position.Y, current_position.Z, current_position.E, current_position.F, movebuffer[mb_tail].c, movebuffer[mb_tail].endpoint.X, movebuffer[mb_tail].endpoint.Y, movebuffer[mb_tail].endpoint.Z, movebuffer[mb_tail].endpoint.E, movebuffer[mb_tail].endpoint.F,
 					#ifdef ACCELERATION_REPRAP
 						movebuffer[mb_tail].end_c
@@ -507,7 +576,7 @@ void process_gcode_command() {
 				break;
 
 			// DEBUG: read arbitrary memory location
-			case 253:
+			case 353:
 				if (next_target.seen_P == 0)
 					next_target.P = 1;
 				for (; next_target.P; next_target.P--) {
@@ -518,7 +587,7 @@ void process_gcode_command() {
 				break;
 
 			// DEBUG: write arbitrary memory locatiom
-			case 254:
+			case 354:
 				sersendf_P(PSTR("%x:%x->%x"), next_target.S, *(volatile uint8_t *)(next_target.S), next_target.P);
 				(*(volatile uint8_t *)(next_target.S)) = next_target.P;
 				// newline is sent from gcode_parse after we return

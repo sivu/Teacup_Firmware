@@ -46,6 +46,7 @@
 #include	"arduino.h"
 #include	"clock.h"
 #include	"intercom.h"
+#include	"eeconfig.h"
 
 #ifdef SD
 	#include	"diskio.h"
@@ -241,6 +242,11 @@ void io_init(void) {
 
 /// Startup code, run when we come out of reset
 void init(void) {
+	#ifdef EECONFIG
+	// read config from eeprom
+	eeconfig_init();
+	#endif
+
 	// set up watchdog
 	wd_init();
 
@@ -334,8 +340,6 @@ int main (void)
 		}
 		#endif
 
-		ifclock(CLOCK_FLAG_10MS) {
-			clock_10ms();
-		}
+		clock_poll();
 	}
 }
