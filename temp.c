@@ -277,16 +277,8 @@ void temp_sensor_tick() {
 			}
 			temp_sensors_runtime[i].last_read_temp = temp;
 		}
-		if (labs((int16_t)(temp_sensors_runtime[i].last_read_temp - temp_sensors_runtime[i].target_temp)) < (TEMP_HYSTERESIS*4)) {
-			if (temp_sensors_runtime[i].temp_residency < (TEMP_RESIDENCY_TIME*100))
-				temp_sensors_runtime[i].temp_residency++;
-		}
-		else {
-			temp_sensors_runtime[i].temp_residency = 0;
-		}
-
 		#ifdef EECONFIG
-			if (labs(temp - temp_sensors_runtime[i].target_temp) < eeconfig.temp_hysteresis) {
+			if (labs(temp_sensors_runtime[i].last_read_temp - temp_sensors_runtime[i].target_temp) < eeconfig.temp_hysteresis) {
 				if (temp_sensors_runtime[i].temp_residency < eeconfig.temp_residency)
 					temp_sensors_runtime[i].temp_residency++;
 			}
@@ -294,7 +286,7 @@ void temp_sensor_tick() {
 				temp_sensors_runtime[i].temp_residency = 0;
 			}
 		#else
-			if (labs(temp - temp_sensors_runtime[i].target_temp) < TEMP_HYSTERESIS) {
+			if (labs(temp_sensors_runtime[i].last_read_temp - temp_sensors_runtime[i].target_temp) < (TEMP_HYSTERESIS * 4)) {
 				if (temp_sensors_runtime[i].temp_residency < TEMP_RESIDENCY_TIME)
 					temp_sensors_runtime[i].temp_residency++;
 			}
