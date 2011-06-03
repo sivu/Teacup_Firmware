@@ -1,5 +1,4 @@
 /* Notice to developers: this file is intentionally included twice. */
-
 /*
 	CPU clock rate
 */
@@ -15,8 +14,8 @@
 
 #include	"arduino.h"
 
-// controller index- bus is multidrop after all
-#define	THIS_CONTROLLER_NUM 0
+// controller index- bus is multidrop after all. HOST IS ALWAYS ZERO
+#define	THIS_CONTROLLER_NUM 1
 
 //RS485 Interface pins
 #define RX_ENABLE_PIN DIO4
@@ -52,6 +51,8 @@
 
 #define	REFERENCE	REFERENCE_AVCC
 
+#define ANALOG_MASK	(MASK(TRIM_POT_CHANNEL) | MASK(TEMP_PIN_CHANNEL) | MASK(TEMP_BED_PIN_CHANNEL))
+
 #define	TEMP_THERMISTOR
 
 #define	HEATER_PIN	DIO11
@@ -63,10 +64,8 @@
 #define	TEMP_RESIDENCY_TIME		60
 
 #ifdef	DEFINE_TEMP_SENSOR
-DEFINE_TEMP_SENSOR(extruder,	TT_THERMISTOR,		TEMP_PIN_CHANNEL,		THERMISTOR_EXTRUDER)
-DEFINE_TEMP_SENSOR(bed,			TT_THERMISTOR,		TEMP_BED_PIN_CHANNEL,	THERMISTOR_EXTRUDER)
-// dummy temp sensor so analog_mask includes trim pot
-DEFINE_TEMP_SENSOR(noheater,	TT_THERMISTOR,		TRIM_POT_CHANNEL,		0)
+DEFINE_TEMP_SENSOR(extruder,	TT_THERMISTOR,		TEMP_PIN_CHANNEL)
+DEFINE_TEMP_SENSOR(bed,			TT_THERMISTOR,		TEMP_BED_PIN_CHANNEL)
 #endif
 
 #ifdef	DEFINE_HEATER
