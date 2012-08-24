@@ -121,6 +121,7 @@ ISR(USART0_RX_vect)
 
 		// not reading the character makes the interrupt logic to swamp us with retries, so better read it and throw it away
 		trash = UDR0;
+		(void)trash;
 	}
 
 	#ifdef	XONXOFF
