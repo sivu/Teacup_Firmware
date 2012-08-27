@@ -279,7 +279,7 @@
 	#define DEFINE_TEMP_SENSOR(...)
 #endif
 
-//                 name       type            pin        additional
+//                 name       type            adc channel        additional
 DEFINE_TEMP_SENSOR(extruder,  TT_THERMISTOR,  0,         THERMISTOR_EXTRUDER)
 DEFINE_TEMP_SENSOR(bed,       TT_THERMISTOR,  1,         THERMISTOR_EXTRUDER)
 // "noheater" is a special name for a sensor which doesn't have a heater.

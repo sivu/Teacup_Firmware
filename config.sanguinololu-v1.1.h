@@ -283,9 +283,9 @@
 	#define DEFINE_TEMP_SENSOR(...)
 #endif
 
-//                 name       type            pin        additional
-DEFINE_TEMP_SENSOR(extruder,  TT_THERMISTOR,  AIO7_PIN,  THERMISTOR_EXTRUDER)
-DEFINE_TEMP_SENSOR(bed,       TT_THERMISTOR,  AIO6_PIN,  THERMISTOR_EXTRUDER)
+//                 name       type            adc channel        additional
+DEFINE_TEMP_SENSOR(extruder,  TT_THERMISTOR,  AIO7_ADC,  THERMISTOR_EXTRUDER)
+DEFINE_TEMP_SENSOR(bed,       TT_THERMISTOR,  AIO6_ADC,  THERMISTOR_EXTRUDER)
 
 
 
